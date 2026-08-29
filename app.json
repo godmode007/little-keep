@@ -1,0 +1,35 @@
+{
+  "expo": {
+    "name": "Little Keep",
+    "slug": "little-keep",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "littlekeep",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#8ED2EA"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.littlekeep.kids"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#8ED2EA",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "package": "com.littlekeep.kids"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": ["expo-router", "expo-font"]
+  }
+}
