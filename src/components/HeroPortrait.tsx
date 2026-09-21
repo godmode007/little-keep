@@ -45,7 +45,8 @@ export function HeroPortrait({
             styles.wash,
             {
               borderRadius: radius - 2,
-              backgroundColor: id === 'blink' ? 'rgba(169, 139, 219, 0.22)' : 'rgba(126, 200, 227, 0.28)',
+/** Soft cream wash — avoids purple plate flash behind sprites. */
+              backgroundColor: 'rgba(255, 248, 232, 0.55)',
             },
           ]}
         />

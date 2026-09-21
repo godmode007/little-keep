@@ -28,13 +28,13 @@ import { KEEP_EXTRA_LEVEL, keepCanGrow, towerCanGrow, wallRank } from '../game/k
 import { campaignComplete, currentLevel } from '../game/progress';
 import {
   BUILD_SPOTS,
+  COURT_PADS,
   PLOTS,
   buildingPhase,
   CAMP,
   CHOP_REACH,
   HORDE_SPEED,
   MAP,
-  FORT_NAMES,
   CARRY_MAX,
   DESTACK_MS,
   FLY_MS,
@@ -170,12 +170,15 @@ function spotPos(spot: string): { x: number; y: number } | null {
 }
 
 function HpMark({ hp, max }: { hp: number; max: number }) {
-  if (max <= 0) return null;
+  if (max <= 0 || hp >= max) return null;
   const pct = Math.max(0, Math.min(100, (hp / max) * 100));
   return (
     <View style={styles.bHpTrack}>
       <View
-        style={[styles.bHpFill, { width: `${pct}%`, backgroundColor: pct < 35 ? '#E24A3E' : '#4A9A5C' }]}
+        style={[
+          styles.bHpFill,
+          { width: `${pct}%`, backgroundColor: pct < 35 ? colors.coral : colors.meadowDeep },
+        ]}
       />
     </View>
   );
@@ -277,7 +280,6 @@ export function KeepField() {
   const millLv = buildingLevels.mill ?? 0;
   const lookout = buildingLevels.lookout ?? 0;
   const towers = towerLevels.length === 4 ? towerLevels : [0, 0, 0, 0];
-  const towersBuilt = towers.filter((n) => n > 0).length;
   const ringLevel = wallRank({ buildingLevels, towerLevels: towers, fortLevel });
   const keepSnap = { buildingLevels, towerLevels: towers, fortLevel: ringLevel };
   const done = campaignComplete({ questsDone, recruited, buildingLevels });
@@ -310,7 +312,6 @@ export function KeepField() {
   const [loot, setLoot] = useState<{ x: number; y: number; n: number; key: number } | null>(null);
   const [drops, setDrops] = useState<Drop[]>([]);
   const [flies, setFlies] = useState<Fly[]>([]);
-  const [fieldPad, setFieldPad] = useState<{ x: number; y: number; kx: number; ky: number } | null>(null);
   const [wave, setWave] = useState(0);
 
   const world = useMemo(() => worldSize(box.width, box.height), [box.width, box.height]);
@@ -1060,6 +1061,13 @@ export function KeepField() {
       setSelected('flag');
       return;
     }
+    for (const pad of COURT_PADS) {
+      if (recruited.includes(pad.id)) continue;
+      if (hitPct(px, py, pad.x, pad.y, 52, world.w, world.h)) {
+        setSelected(pad.id);
+        return;
+      }
+    }
     for (const slot of TOWER_SLOTS) {
       if (hitPct(px, py, slot.x, slot.y, towerSize, world.w, world.h)) {
         setSelected(`tower-${slot.i}`);
@@ -1078,10 +1086,8 @@ export function KeepField() {
       PanResponder.create({
         onStartShouldSetPanResponder: () => true,
         onMoveShouldSetPanResponder: (_, g) => Math.abs(g.dx) + Math.abs(g.dy) > 4,
-        onPanResponderGrant: (e) => {
+        onPanResponderGrant: () => {
           dragged.current = false;
-          const { locationX, locationY } = e.nativeEvent;
-          setFieldPad({ x: locationX, y: locationY, kx: 0, ky: 0 });
         },
         onPanResponderMove: (_, g) => {
           const mag = Math.hypot(g.dx, g.dy) || 1;
@@ -1090,17 +1096,14 @@ export function KeepField() {
           const kx = g.dx * scale;
           const ky = g.dy * scale;
           fieldStickRef.current = { x: kx / STICK_MAX, y: ky / STICK_MAX };
-          setFieldPad((p) => (p ? { ...p, kx, ky } : p));
         },
         onPanResponderRelease: (e) => {
           fieldStickRef.current = { x: 0, y: 0 };
-          setFieldPad(null);
           if (dragged.current) return;
           tapRef.current(e.nativeEvent.locationX, e.nativeEvent.locationY);
         },
         onPanResponderTerminate: () => {
           fieldStickRef.current = { x: 0, y: 0 };
-          setFieldPad(null);
         },
       }),
     []
@@ -1261,13 +1264,6 @@ export function KeepField() {
             }}
           >
             <Image source={phaseArt(HUT_ART, castle, 5)} style={{ width: hutSize, height: hutSize }} resizeMode="contain" />
-            <Text style={styles.fundTag}>
-              {castle >= 5
-                ? `lv ${castle} max`
-                : keepGate.ok
-                  ? `lv ${castle}  tap to upgrade`
-                  : `lv ${castle}  ${keepGate.message}`}
-            </Text>
             <HpMark hp={buildingHp.castle ?? maxBuildingHp('castle', castle)} max={maxBuildingHp('castle', castle)} />
           </View>
 
@@ -1286,13 +1282,10 @@ export function KeepField() {
             >
               <Image source={phaseArt(FARM_ART, farmLv, 5)} style={{ width: farmSize, height: farmSize }} resizeMode="contain" />
               {collectReady ? <Text style={styles.sparkle}>✨</Text> : null}
-              <Text style={styles.fundTag}>{`lv ${farmLv}`}</Text>
               <HpMark hp={buildingHp.farm ?? maxBuildingHp('farm', farmLv)} max={maxBuildingHp('farm', farmLv)} />
             </View>
           ) : (
-            <View style={[styles.pad, { left: `${BUILD_SPOTS.farm.x}%`, top: `${BUILD_SPOTS.farm.y}%` }]}>
-              <Text style={styles.padLabel}>🌾</Text>
-            </View>
+            <View style={[styles.pad, { left: `${BUILD_SPOTS.farm.x}%`, top: `${BUILD_SPOTS.farm.y}%` }]} />
           )}
 
           {hutLv > 0 ? (
@@ -1309,13 +1302,10 @@ export function KeepField() {
               }}
             >
               <Image source={phaseArt(SHED_ART, hutLv, 5)} style={{ width: shedSize, height: shedSize }} resizeMode="contain" />
-              <Text style={styles.fundTag}>{`lv ${hutLv}`}</Text>
               <HpMark hp={buildingHp.hut ?? maxBuildingHp('hut', hutLv)} max={maxBuildingHp('hut', hutLv)} />
             </View>
           ) : (
-            <View style={[styles.pad, { left: `${BUILD_SPOTS.shed.x}%`, top: `${BUILD_SPOTS.shed.y}%` }]}>
-              <Text style={styles.padLabel}>🪵</Text>
-            </View>
+            <View style={[styles.pad, { left: `${BUILD_SPOTS.shed.x}%`, top: `${BUILD_SPOTS.shed.y}%` }]} />
           )}
 
           {workshopLv > 0 ? (
@@ -1332,23 +1322,16 @@ export function KeepField() {
               }}
             >
               <Image source={phaseArt(WORKSHOP_ART, workshopLv, 3)} style={{ width: workshopSize, height: workshopSize }} resizeMode="contain" />
-              <Text style={styles.fundTag}>{`lv ${workshopLv}`}</Text>
               <HpMark
                 hp={buildingHp.workshop ?? maxBuildingHp('workshop', workshopLv)}
                 max={maxBuildingHp('workshop', workshopLv)}
               />
             </View>
           ) : castle >= 2 ? (
-            <View style={[styles.pad, { left: `${BUILD_SPOTS.workshop.x}%`, top: `${BUILD_SPOTS.workshop.y}%` }]}>
-              <Text style={styles.padLabel}>🛠️</Text>
-              <Text style={styles.fundTag}>+</Text>
-            </View>
+            <View style={[styles.pad, { left: `${BUILD_SPOTS.workshop.x}%`, top: `${BUILD_SPOTS.workshop.y}%` }]} />
           ) : null}
 
-          <View style={[styles.pad, { left: `${BUILD_SPOTS.store.x}%`, top: `${BUILD_SPOTS.store.y}%` }]}>
-            <Text style={styles.padLabel}>📦</Text>
-            <Text style={styles.fundTag}>store</Text>
-          </View>
+          <View style={[styles.pad, { left: `${BUILD_SPOTS.store.x}%`, top: `${BUILD_SPOTS.store.y}%` }]} />
 
           {castle >= KEEP_EXTRA_LEVEL ? (
             millLv > 0 ? (
@@ -1365,14 +1348,10 @@ export function KeepField() {
                 }}
               >
                 <Image source={phaseArt(MILL_ART, millLv, 5)} style={{ width: millSize, height: millSize }} resizeMode="contain" />
-                <Text style={styles.fundTag}>{`lv ${millLv}`}</Text>
                 <HpMark hp={buildingHp.mill ?? maxBuildingHp('mill', millLv)} max={maxBuildingHp('mill', millLv)} />
               </View>
             ) : (
-              <View style={[styles.pad, { left: `${BUILD_SPOTS.mill.x}%`, top: `${BUILD_SPOTS.mill.y}%` }]}>
-                <Text style={styles.padLabel}>⚙️</Text>
-                <Text style={styles.fundTag}>+</Text>
-              </View>
+              <View style={[styles.pad, { left: `${BUILD_SPOTS.mill.x}%`, top: `${BUILD_SPOTS.mill.y}%` }]} />
             )
           ) : null}
 
@@ -1404,7 +1383,6 @@ export function KeepField() {
                   resizeMode="contain"
                 />
                 {!cooling && !digging ? <Text style={styles.sparkle}>✨</Text> : null}
-                <Text style={styles.fundTag}>{cooling ? 'cooling' : 'gold mine'}</Text>
               </View>
             );
           })}
@@ -1415,11 +1393,7 @@ export function KeepField() {
             const grow = towerCanGrow(keepSnap, slot.i);
             const nextCost = scaleCost(TOWER_COST, Math.max(1, grow.next), (workshopLv ?? 0) * 0.08);
             const fund = buildingFund[`tower-${slot.i}`] ?? { wood: 0, coins: 0 };
-            let tag = `${fund.wood}/${nextCost.wood ?? 0}`;
-            if (lv === 0) tag = `${towersBuilt}/4  ${fund.wood}/${nextCost.wood ?? 0}`;
-            else if (lv >= 4) tag = 'cement';
-            else if (!grow.ok) tag = `lv ${lv}  grow the hut first`;
-            else tag = `${FORT_NAMES[lv]} → ${FORT_NAMES[grow.next]}  ${fund.wood}/${nextCost.wood ?? 0}`;
+            const funding = fund.wood > 0 || fund.coins > 0;
             return (
               <View
                 key={`tw-${slot.i}`}
@@ -1449,15 +1423,43 @@ export function KeepField() {
                     resizeMode="contain"
                   />
                 ) : (
-                  <Text style={styles.plotCost}>{`🪵${nextCost.wood} 🪙${nextCost.coins}`}</Text>
+                  <Text style={styles.plotCost}>{`🪵${nextCost.wood}`}</Text>
                 )}
-                <Text style={styles.fundTag}>{tag}</Text>
+                {funding ? (
+                  <Text style={styles.fundTag}>{`${fund.wood}/${nextCost.wood ?? 0}`}</Text>
+                ) : null}
                 {lv > 0 ? (
                   <HpMark
                     hp={towerHp[slot.i] ?? maxTowerHp(true, lv)}
                     max={maxTowerHp(true, lv)}
                   />
                 ) : null}
+              </View>
+            );
+          })}
+
+          {COURT_PADS.filter((pad) => !recruited.includes(pad.id)).map((pad) => {
+            const hero = HEROES.find((h) => h.id === pad.id);
+            return (
+              <View
+                key={`court-${pad.id}`}
+                style={{
+                  position: 'absolute',
+                  left: `${pad.x}%`,
+                  top: `${pad.y}%`,
+                  width: 52,
+                  height: 64,
+                  marginLeft: -26,
+                  marginTop: -32,
+                  alignItems: 'center',
+                  zIndex: 5,
+                }}
+              >
+                <View style={styles.courtPad} />
+                <Image source={HERO_ART[pad.id]} style={styles.courtArt} resizeMode="contain" />
+                <Text style={styles.courtTag} numberOfLines={1}>
+                  {hero?.name ?? pad.id}
+                </Text>
               </View>
             );
           })}
@@ -1503,9 +1505,19 @@ export function KeepField() {
             >
               {targetId === e.id ? <View style={styles.agro} /> : null}
               <Image source={TROLL_ART} style={{ width: TROLL_SIZE, height: TROLL_SIZE }} resizeMode="contain" />
-              <View style={styles.hpTrack}>
-                <View style={[styles.hpFill, { width: `${(e.hp / e.max) * 100}%` }]} />
-              </View>
+              {e.hp < e.max ? (
+                <View style={styles.hpTrack}>
+                  <View
+                    style={[
+                      styles.hpFill,
+                      {
+                        width: `${(e.hp / e.max) * 100}%`,
+                        backgroundColor: e.hp / e.max < 0.35 ? colors.coral : colors.gold,
+                      },
+                    ]}
+                  />
+                </View>
+              ) : null}
             </View>
           ))}
 
@@ -1635,30 +1647,30 @@ export function KeepField() {
           {done
             ? 'The keep is yours.'
             : carryTotal >= CARRY_MAX
-              ? `Back is full (${CARRY_MAX}/${CARRY_MAX}) — dump at the storehouse.`
+              ? `Back is full — dump at the storehouse.`
               : mineId
                 ? 'Mining gold!'
                 : carryingWood || carryingCoins
-                  ? `Back ${carryTotal}/${CARRY_MAX}  🪵${carryingWood}  🪙${carryingCoins} — dump at the storehouse.`
+                  ? `Carrying ${carryTotal}/${CARRY_MAX} — dump at the storehouse.`
                   : chopId
                     ? 'Chop! Chop!'
                     : drops.length
-                      ? 'Walk over the coins to stack them on your back.'
-                      : !keepGate.ok
-                        ? keepGate.message
-                        : wave
-                          ? `Horde ${Math.min(wave, hordeCap)}/${hordeCap}. ${ringLevel ? `${FORT_NAMES[ringLevel]} wall.` : `${towersBuilt}/4 towers for the wood wall.`}`
+                      ? 'Walk over the coins to pick them up.'
+                      : wave
+                        ? `Horde ${Math.min(wave, hordeCap)}/${hordeCap} — shoo the trolls.`
+                        : !keepGate.ok
+                          ? keepGate.message
                           : ringLevel
                             ? keepGate.message
-                            : 'Tap a gold square to plant a tower. Walls go up when all four are planted.'}
+                            : 'Tap a gold square to plant a tower.'}
         </Text>
       </View>
 
-      <View style={styles.hunt}>
-        <Text style={styles.huntText}>
-          {wave ? `🌊${Math.min(wave, hordeCap)}/${hordeCap}  🧌${alive.length}` : `🏕️ ${hordeCap} hordes`}
-        </Text>
-      </View>
+      {wave ? (
+        <View style={styles.hunt}>
+          <Text style={styles.huntText}>{`${Math.min(wave, hordeCap)}/${hordeCap}`}</Text>
+        </View>
+      ) : null}
 
       <View style={styles.avatars}>
         {HEROES.map((h) => {
@@ -1710,12 +1722,6 @@ export function KeepField() {
           }}
         />
       </View>
-
-      {fieldPad ? (
-        <View style={[styles.padHalo, { left: fieldPad.x - 55, top: fieldPad.y - 55, pointerEvents: 'none' }]}>
-          <View style={[styles.padKnob, { transform: [{ translateX: fieldPad.kx }, { translateY: fieldPad.ky }] }]} />
-        </View>
-      ) : null}
 
       <Pressable style={styles.action} onPress={doAction}>
         <Text style={styles.actionGlyph}>{mineId ? '🪙' : chopId ? '🪓' : WEAPON[avatar]}</Text>
@@ -1792,14 +1798,14 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: 72,
     height: 72,
-    borderWidth: 3,
+    borderWidth: 2,
     borderColor: colors.gold,
-    backgroundColor: 'rgba(242, 193, 78, 0.22)',
-    borderRadius: 6,
+    backgroundColor: 'rgba(242, 193, 78, 0.16)',
+    borderRadius: 10,
   },
   plotCost: {
     fontFamily: fonts.bodyBold,
-    fontSize: 10,
+    fontSize: 11,
     color: colors.ink,
     textAlign: 'center',
     marginTop: 2,
@@ -1809,7 +1815,12 @@ const styles = StyleSheet.create({
     bottom: -14,
     fontFamily: fonts.bodyBold,
     fontSize: 10,
-    color: colors.ink,
+    color: colors.inkSoft,
+    backgroundColor: colors.cream,
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: 8,
+    overflow: 'hidden',
   },
   pad: {
     position: 'absolute',
@@ -1819,33 +1830,54 @@ const styles = StyleSheet.create({
     marginTop: -18,
     borderWidth: 2,
     borderStyle: 'dashed',
-    borderColor: 'rgba(255, 248, 232, 0.7)',
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(43, 58, 66, 0.12)',
+    borderColor: 'rgba(255, 248, 232, 0.55)',
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 248, 232, 0.12)',
   },
   padLabel: { fontSize: 16 },
   spotTag: { position: 'absolute', bottom: -6, fontSize: 14 },
+  courtPad: {
+    position: 'absolute',
+    bottom: 4,
+    width: 40,
+    height: 18,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderStyle: 'dashed',
+    borderColor: 'rgba(255, 248, 232, 0.7)',
+    backgroundColor: 'rgba(255, 248, 232, 0.2)',
+  },
+  courtArt: { width: 48, height: 48, opacity: 0.92 },
+  courtTag: {
+    marginTop: -2,
+    fontFamily: fonts.bodyBold,
+    fontSize: 10,
+    color: colors.ink,
+    backgroundColor: colors.cream,
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: 8,
+    overflow: 'hidden',
+  },
   agro: {
     position: 'absolute',
     width: 70,
     height: 70,
     borderRadius: 35,
-    backgroundColor: 'rgba(232, 74, 62, 0.28)',
-    borderWidth: 3,
-    borderColor: 'rgba(232, 74, 62, 0.8)',
+    backgroundColor: 'rgba(242, 193, 78, 0.22)',
+    borderWidth: 2,
+    borderColor: colors.gold,
     top: -6,
   },
   hpTrack: {
     width: 28,
     height: 5,
     borderRadius: 3,
-    backgroundColor: 'rgba(43, 58, 66, 0.35)',
+    backgroundColor: 'rgba(43, 58, 66, 0.28)',
     overflow: 'hidden',
     marginTop: -4,
   },
-  hpFill: { height: 5, backgroundColor: '#E24A3E', borderRadius: 3 },
+  hpFill: { height: 5, borderRadius: 3 },
   bHpTrack: {
     width: 36,
     height: 5,
@@ -1969,24 +2001,6 @@ const styles = StyleSheet.create({
   },
   homeGlyph: { fontFamily: fonts.displayMed, fontSize: 13, color: colors.ink },
   joyWrap: { position: 'absolute', left: 16, bottom: 18, zIndex: 12 },
-  padHalo: {
-    position: 'absolute',
-    width: 110,
-    height: 110,
-    borderRadius: 55,
-    backgroundColor: 'rgba(255, 255, 255, 0.16)',
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.5)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 11,
-  },
-  padKnob: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(255, 255, 255, 0.7)',
-  },
   action: {
     position: 'absolute',
     right: 16,
