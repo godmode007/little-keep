@@ -295,11 +295,6 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: colors.border,
     gap: 10,
-    shadowColor: colors.ink,
-    shadowOpacity: 0.12,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: -4 },
-    elevation: 8,
   },
   handle: {
     alignSelf: 'center',

@@ -39,7 +39,7 @@ export default function FriendsScreen() {
           return (
             <Bubble key={h.id} style={inParty ? styles.joinedCard : undefined}>
               <View style={styles.row}>
-                <HeroPortrait id={h.id} size={84} selected={inParty} dimmed={!inParty && h.id !== 'pip'} />
+                <HeroPortrait id={h.id} size={96} selected={inParty} />
                 <View style={styles.copy}>
                   <Text style={styles.name}>
                     {h.name} {h.title}

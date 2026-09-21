@@ -1683,7 +1683,8 @@ export function KeepField() {
               }}
               style={[styles.avatarBtn, active && styles.avatarOn]}
             >
-              <HeroPortrait id={h.id} size={56} selected={active} dimmed={locked} />
+              <HeroPortrait id={h.id} size={56} selected={active} dimmed={false} />
+              {locked ? <View style={styles.avatarLockBadge} pointerEvents="none" /> : null}
               <Text style={[styles.avatarTag, locked && styles.avatarTagLock]} numberOfLines={1}>
                 {h.race === 'Fairy' ? 'Fairy' : h.role}
               </Text>
@@ -1924,8 +1925,21 @@ const styles = StyleSheet.create({
     width: 56,
     alignItems: 'center',
     gap: 2,
+    position: 'relative',
   },
   avatarOn: {},
+  avatarLockBadge: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 56,
+    borderRadius: 16,
+    backgroundColor: 'rgba(43, 58, 66, 0.28)',
+    borderWidth: 2,
+    borderColor: 'rgba(255, 248, 232, 0.55)',
+    borderStyle: 'dashed',
+  },
   avatarTag: {
     fontFamily: fonts.bodyBold,
     fontSize: 10,
