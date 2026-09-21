@@ -1,6 +1,6 @@
-export type ResourceKey = 'food' | 'wood' | 'stars';
+export type ResourceKey = 'food' | 'wood' | 'stars' | 'coins';
 
-export type BuildingId = 'castle' | 'farm' | 'hut' | 'workshop';
+export type BuildingId = 'castle' | 'wall' | 'farm' | 'hut' | 'workshop' | 'lookout' | 'mill';
 
 export type HeroId = 'pip' | 'mira' | 'blink' | 'nana';
 
@@ -9,13 +9,17 @@ export type QuestId =
   | 'garden'
   | 'kitten'
   | 'woods'
+  | 'lantern'
   | 'fair';
 
 export interface Resources {
   food: number;
   wood: number;
   stars: number;
+  coins: number;
 }
+
+export type Fund = { wood: number; coins: number };
 
 export interface BuildingDef {
   id: BuildingId;

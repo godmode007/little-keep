@@ -26,8 +26,8 @@ export default function TitleScreen() {
   useEffect(() => {
     const loop = Animated.loop(
       Animated.sequence([
-        Animated.timing(bounce, { toValue: 1, duration: 900, useNativeDriver: true }),
-        Animated.timing(bounce, { toValue: 0, duration: 900, useNativeDriver: true }),
+        Animated.timing(bounce, { toValue: 1, duration: 900, useNativeDriver: false }),
+        Animated.timing(bounce, { toValue: 0, duration: 900, useNativeDriver: false }),
       ])
     );
     loop.start();
@@ -47,9 +47,9 @@ export default function TitleScreen() {
       >
         <Animated.Text style={[styles.castle, { transform: [{ translateY: y }] }]}>🏰</Animated.Text>
         <Text style={styles.brand}>Little Keep</Text>
-        <Text style={styles.tag}>A cozy castle adventure for kids</Text>
+        <Text style={styles.tag}>A mixed-age D&D keep</Text>
         <Text style={styles.lead}>
-          Collect food and wood, make hero friends, and finish fun quests to earn stars!
+          Gather food and wood, recruit a party, and walk out the gate to shoo trolls — never slay them.
         </Text>
 
         <View style={styles.form}>

@@ -1,0 +1,11 @@
+{
+  "name": "little-keep-qa",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "record": "node record-first-level.mjs"
+  },
+  "dependencies": {
+    "playwright": "^1.49.1"
+  }
+}

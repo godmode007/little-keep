@@ -25,14 +25,19 @@ export default function BuildScreen() {
       </View>
       <ScrollView contentContainerStyle={styles.scroll}>
         <Text style={styles.title}>Build</Text>
-        <Text style={styles.sub}>Make your keep bigger and happier.</Text>
+        <Text style={styles.sub}>
+          Dump wood and coins at the storehouse on Home, then tap a building to Upgrade. Plant all four towers so the wall comes up, then grow the hut. After hut 3 a mill opens inside the west wall.
+        </Text>
 
-        {BUILDINGS.filter((b) => castle >= b.unlockCastle || b.id === 'castle').map((b) => {
+        {BUILDINGS.filter(
+          (b) => b.id !== 'wall' && (castle >= b.unlockCastle || b.id === 'castle')
+        ).map((b) => {
           const level = buildingLevels[b.id];
           const cost = scaleCost(b.baseCost, Math.max(1, level + 1), workshop * 0.08);
           const costText = Object.entries(cost)
             .map(([k, v]) => `${v} ${k}`)
             .join(' · ');
+          const fieldOnly = b.id === 'lookout';
           return (
             <Bubble key={b.id}>
               <Text style={styles.emoji}>{b.emoji}</Text>
@@ -50,13 +55,17 @@ export default function BuildScreen() {
                 </Text>
               ) : null}
               <Text style={styles.cost}>{level >= b.maxLevel ? 'Maxed!' : `Next: ${costText}`}</Text>
-              <BigButton
-                label={level === 0 ? 'Build' : 'Upgrade'}
-                tone="gold"
-                disabled={level >= b.maxLevel}
-                onPress={() => upgrade(b.id)}
-                style={{ marginTop: 10 }}
-              />
+              {fieldOnly ? (
+                <Text style={styles.meta}>Tap a gold square on Home to plant or rank that tower.</Text>
+              ) : (
+                <BigButton
+                  label={level === 0 ? 'Build' : 'Upgrade'}
+                  tone="gold"
+                  disabled={level >= b.maxLevel}
+                  onPress={() => upgrade(b.id)}
+                  style={{ marginTop: 10 }}
+                />
+              )}
             </Bubble>
           );
         })}

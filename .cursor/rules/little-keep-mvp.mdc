@@ -1,0 +1,13 @@
+---
+description: Little Keep MVP — playing field, kid tone, Expo 57, Kingshot as fantasy only
+alwaysApply: true
+---
+
+# Little Keep MVP
+
+- Ship a keep **playing field** with tappable buildings and a party on Home.
+- Tone: D&D for mixed ages (6–14). Elves + fairy in the party. Trolls/ogres as baddies to **shoo**, not slay. Not toddler, not grim.
+- Reference: Kingshot store listing, fantasy only — no PvP, IAP, chat, or grim combat.
+- Expo SDK 57 docs before new APIs: https://docs.expo.dev/versions/v57.0.0/
+- Keep `little-keep-save-v1` compatible unless you add a migration.
+- Palette: sky / meadow / gold / cream. Fredoka + Nunito.

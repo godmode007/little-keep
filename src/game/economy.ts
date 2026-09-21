@@ -25,7 +25,7 @@ export function scaleCost(
   level: number,
   discount = 0
 ): Partial<Resources> {
-  const factor = Math.max(0.5, 1 + (level - 1) * 0.45 - discount);
+  const factor = Math.max(0.5, 1 + (level - 1) * 0.55 - discount);
   const out: Partial<Resources> = {};
   for (const k of Object.keys(base) as (keyof Resources)[]) {
     out[k] = Math.ceil((base[k] ?? 0) * factor);
