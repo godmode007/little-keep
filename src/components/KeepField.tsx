@@ -12,6 +12,7 @@ import {
   View,
 } from 'react-native';
 import { BUILDINGS, HEROES } from '../data/catalog';
+import { HERO_ART } from '../data/heroArt';
 import type { BuildingId, HeroId } from '../data/types';
 import { scaleCost } from '../game/economy';
 import {
@@ -60,6 +61,7 @@ import {
 import { useKidsStore } from '../store/kidsStore';
 import { colors, fonts } from '../theme/theme';
 import { FieldSheet, type FieldTarget } from './FieldSheet';
+import { HeroPortrait } from './HeroPortrait';
 import { Joystick } from './Joystick';
 
 const PINE_ART = require('../../assets/game/pine.png') as ImageSourcePropType;
@@ -115,16 +117,10 @@ function towerArt(lv: number): ImageSourcePropType {
 const MINE_ART = require('../../assets/game/mine.png') as ImageSourcePropType;
 const TROLL_ART = require('../../assets/game/troll.png') as ImageSourcePropType;
 const PIP_CHOP = require('../../assets/game/pip-chop.png') as ImageSourcePropType;
-const HERO_ART: Record<HeroId, ImageSourcePropType> = {
-  pip: require('../../assets/game/pip.png') as ImageSourcePropType,
-  mira: require('../../assets/game/mira.png') as ImageSourcePropType,
-  blink: require('../../assets/game/blink.png') as ImageSourcePropType,
-  nana: require('../../assets/game/nana.png') as ImageSourcePropType,
-};
 
 const TILE_SCALE = 1.12;
 const COLLECT_WAIT_MS = 4000;
-const HERO_SIZE = 56;
+const HERO_SIZE = 64;
 const PINE_W = 72;
 const PINE_H = 128;
 const TOWER_PLOT = 6.2;
@@ -1667,16 +1663,30 @@ export function KeepField() {
       <View style={styles.avatars}>
         {HEROES.map((h) => {
           const locked = h.id !== 'pip' && !recruited.includes(h.id);
+          const active = avatar === h.id && !locked;
           return (
             <Pressable
               key={h.id}
+              accessibilityRole="button"
+              accessibilityLabel={
+                locked
+                  ? `${h.name} the ${h.role}, not recruited yet`
+                  : `Play as ${h.name} the ${h.role}`
+              }
               onPress={() => {
-                if (locked) return;
+                if (locked) {
+                  setSelected(h.id);
+                  return;
+                }
                 setAvatar(h.id);
+                setSelected(h.id);
               }}
-              style={[styles.avatarBtn, avatar === h.id && styles.avatarOn, locked && styles.avatarLock]}
+              style={[styles.avatarBtn, active && styles.avatarOn]}
             >
-              <Image source={HERO_ART[h.id]} style={styles.avatarArt} resizeMode="contain" />
+              <HeroPortrait id={h.id} size={56} selected={active} dimmed={locked} />
+              <Text style={[styles.avatarTag, locked && styles.avatarTagLock]} numberOfLines={1}>
+                {h.race === 'Fairy' ? 'Fairy' : h.role}
+              </Text>
             </Pressable>
           );
         })}
@@ -1689,7 +1699,7 @@ export function KeepField() {
           syncAvatar();
         }}
       >
-        <Text style={styles.homeGlyph}>🛖</Text>
+        <Text style={styles.homeGlyph}>Camp</Text>
       </Pressable>
 
       <View style={styles.joyWrap}>
@@ -1909,34 +1919,41 @@ const styles = StyleSheet.create({
     color: colors.ink,
     marginLeft: -28,
   },
-  avatars: { position: 'absolute', right: 12, top: 86, gap: 8, zIndex: 12 },
+  avatars: { position: 'absolute', right: 10, top: 86, gap: 10, zIndex: 12, alignItems: 'center' },
   avatarBtn: {
-    width: 52,
-    height: 52,
-    borderRadius: 14,
-    backgroundColor: colors.panel,
-    borderWidth: 2,
-    borderColor: colors.border,
-    overflow: 'hidden',
+    width: 56,
+    alignItems: 'center',
+    gap: 2,
   },
-  avatarOn: { borderColor: colors.gold, borderWidth: 3 },
-  avatarLock: { opacity: 0.35 },
-  avatarArt: { width: 52, height: 52 },
+  avatarOn: {},
+  avatarTag: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 10,
+    color: colors.ink,
+    backgroundColor: colors.cream,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+    overflow: 'hidden',
+    maxWidth: 64,
+    textAlign: 'center',
+  },
+  avatarTagLock: { opacity: 0.55 },
   homeBtn: {
     position: 'absolute',
     left: 12,
     top: 86,
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: colors.panel,
+    width: 52,
+    height: 52,
+    borderRadius: 16,
+    backgroundColor: colors.cream,
     borderWidth: 2,
     borderColor: colors.border,
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 12,
   },
-  homeGlyph: { fontSize: 22 },
+  homeGlyph: { fontFamily: fonts.displayMed, fontSize: 13, color: colors.ink },
   joyWrap: { position: 'absolute', left: 16, bottom: 18, zIndex: 12 },
   padHalo: {
     position: 'absolute',

@@ -36,7 +36,13 @@ export interface HeroDef {
   id: HeroId;
   name: string;
   title: string;
+  /** Short race label shown in sheets / Friends (e.g. Wood Elf). */
+  race: string;
+  /** Class role for kids (e.g. Ranger). */
+  role: string;
   blurb: string;
+  /** One kid sentence when they join or stand on the lawn. */
+  presence: string;
   emoji: string;
   power: number;
   recruitCost: Partial<Resources>;

@@ -1,9 +1,26 @@
 import { Tabs } from 'expo-router';
-import { StyleSheet, Text } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { colors, fonts } from '../../src/theme/theme';
 
-function Icon({ glyph, focused }: { glyph: string; focused: boolean }) {
-  return <Text style={{ fontSize: focused ? 22 : 18, opacity: focused ? 1 : 0.55 }}>{glyph}</Text>;
+const TINT = {
+  home: colors.skyDeep,
+  build: colors.goldDeep,
+  friends: colors.meadowDeep,
+  quests: colors.coral,
+} as const;
+
+function TabMark({ tone, focused }: { tone: keyof typeof TINT; focused: boolean }) {
+  return (
+    <View
+      style={[
+        styles.mark,
+        {
+          backgroundColor: focused ? TINT[tone] : 'rgba(43, 58, 66, 0.18)',
+          borderColor: focused ? colors.ink : colors.border,
+        },
+      ]}
+    />
+  );
 }
 
 export default function TabsLayout() {
@@ -21,28 +38,28 @@ export default function TabsLayout() {
         name="home"
         options={{
           title: 'Home',
-          tabBarIcon: ({ focused }) => <Icon glyph="🏠" focused={focused} />,
+          tabBarIcon: ({ focused }) => <TabMark tone="home" focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="build"
         options={{
           title: 'Build',
-          tabBarIcon: ({ focused }) => <Icon glyph="🧱" focused={focused} />,
+          tabBarIcon: ({ focused }) => <TabMark tone="build" focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="friends"
         options={{
           title: 'Friends',
-          tabBarIcon: ({ focused }) => <Icon glyph="🦸" focused={focused} />,
+          tabBarIcon: ({ focused }) => <TabMark tone="friends" focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="quests"
         options={{
           title: 'Quests',
-          tabBarIcon: ({ focused }) => <Icon glyph="🗺️" focused={focused} />,
+          tabBarIcon: ({ focused }) => <TabMark tone="quests" focused={focused} />,
         }}
       />
     </Tabs>
@@ -53,9 +70,16 @@ const styles = StyleSheet.create({
   bar: {
     backgroundColor: colors.cream,
     borderTopColor: colors.border,
-    height: 68,
-    paddingBottom: 8,
+    borderTopWidth: 2,
+    height: 70,
+    paddingBottom: 10,
     paddingTop: 8,
   },
   label: { fontFamily: fonts.bodyBold, fontSize: 12 },
+  mark: {
+    width: 22,
+    height: 10,
+    borderRadius: 6,
+    borderWidth: 2,
+  },
 });

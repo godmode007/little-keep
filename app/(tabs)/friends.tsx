@@ -2,6 +2,7 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BigButton } from '../../src/components/BigButton';
 import { Bubble } from '../../src/components/Bubble';
+import { HeroPortrait } from '../../src/components/HeroPortrait';
 import { Shell } from '../../src/components/Shell';
 import { Toast } from '../../src/components/Toast';
 import { TopBar } from '../../src/components/TopBar';
@@ -14,6 +15,7 @@ export default function FriendsScreen() {
   const recruited = useKidsStore((s) => s.recruited);
   const recruit = useKidsStore((s) => s.recruit);
   const lastMessage = useKidsStore((s) => s.lastMessage);
+  const inPartyCount = recruited.length;
 
   return (
     <Shell>
@@ -22,7 +24,12 @@ export default function FriendsScreen() {
       </View>
       <ScrollView contentContainerStyle={styles.scroll}>
         <Text style={styles.title}>Hero Friends</Text>
-        <Text style={styles.sub}>Party power: {partyPower(recruited)}</Text>
+        <Text style={styles.sub}>
+          Party {inPartyCount}/4 · Power {partyPower(recruited)}
+        </Text>
+        <Text style={styles.hint}>
+          Pip is human. Mira is a wood elf. Blink is a fairy wizard. Nana is a high elf cleric.
+        </Text>
 
         {HEROES.map((h) => {
           const inParty = recruited.includes(h.id);
@@ -30,15 +37,22 @@ export default function FriendsScreen() {
             .map(([k, v]) => `${v} ${k}`)
             .join(' · ');
           return (
-            <Bubble key={h.id}>
-              <Text style={styles.emoji}>{h.emoji}</Text>
-              <Text style={styles.name}>
-                {h.name} {h.title}
-              </Text>
-              <Text style={styles.blurb}>{h.blurb}</Text>
-              <Text style={styles.meta}>Power {h.power}</Text>
+            <Bubble key={h.id} style={inParty ? styles.joinedCard : undefined}>
+              <View style={styles.row}>
+                <HeroPortrait id={h.id} size={84} selected={inParty} dimmed={!inParty && h.id !== 'pip'} />
+                <View style={styles.copy}>
+                  <Text style={styles.name}>
+                    {h.name} {h.title}
+                  </Text>
+                  <Text style={styles.race}>
+                    {h.race} · {h.role}
+                  </Text>
+                  <Text style={styles.blurb}>{inParty ? h.presence : h.blurb}</Text>
+                  <Text style={styles.meta}>Power {h.power}</Text>
+                </View>
+              </View>
               {inParty ? (
-                <Text style={styles.joined}>In your party!</Text>
+                <Text style={styles.joined}>On the lawn with you</Text>
               ) : (
                 <>
                   <Text style={styles.cost}>{cost || 'Free friend'}</Text>
@@ -66,17 +80,30 @@ const styles = StyleSheet.create({
     fontFamily: fonts.bodySemi,
     fontSize: 15,
     color: colors.inkSoft,
-    marginBottom: 12,
+    marginBottom: 6,
   },
-  emoji: { fontSize: 40, marginBottom: 4 },
+  hint: {
+    fontFamily: fonts.body,
+    fontSize: 14,
+    lineHeight: 20,
+    color: colors.inkSoft,
+    marginBottom: 14,
+  },
+  row: { flexDirection: 'row', gap: 14, alignItems: 'center' },
+  copy: { flex: 1, gap: 2 },
   name: { fontFamily: fonts.displaySemi, fontSize: 20, color: colors.ink },
+  race: { fontFamily: fonts.displayMed, fontSize: 14, color: colors.meadowDeep },
   blurb: { fontFamily: fonts.body, fontSize: 15, color: colors.ink, marginTop: 4 },
-  meta: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.lilac, marginTop: 6 },
-  cost: { fontFamily: fonts.bodySemi, fontSize: 14, color: colors.inkSoft, marginTop: 6 },
+  meta: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.inkSoft, marginTop: 6 },
+  cost: { fontFamily: fonts.bodySemi, fontSize: 14, color: colors.inkSoft, marginTop: 10 },
   joined: {
-    marginTop: 10,
+    marginTop: 12,
     fontFamily: fonts.displayMed,
     fontSize: 16,
     color: colors.meadowDeep,
+  },
+  joinedCard: {
+    borderColor: 'rgba(62, 154, 74, 0.35)',
+    backgroundColor: 'rgba(255, 248, 232, 0.98)',
   },
 });
