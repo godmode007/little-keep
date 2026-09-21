@@ -28,26 +28,37 @@ export default function QuestsScreen() {
       </View>
       <ScrollView contentContainerStyle={styles.scroll}>
         <Text style={styles.title}>Quests</Text>
-        <Text style={styles.sub}>Your power: {power}. Pick a fun adventure!</Text>
+        <Text style={styles.sub}>
+          Party power {power}. Shoo trolls and ogres — never slay them. The gate flag on Home opens the next adventure too.
+        </Text>
 
         {available.map((q) => {
           const done = questsDone.includes(q.id);
           const cost = Object.entries(q.cost)
             .map(([k, v]) => `${v} ${k}`)
             .join(' · ');
+          const rewardBits = [`${q.rewardStars} stars`];
+          if (q.rewardFood) rewardBits.push(`${q.rewardFood} food`);
+          if (q.rewardWood) rewardBits.push(`${q.rewardWood} wood`);
           return (
-            <Bubble key={q.id}>
-              <Text style={styles.emoji}>{q.emoji}</Text>
-              <Text style={styles.name}>{q.name}</Text>
-              <Text style={styles.blurb}>{q.blurb}</Text>
+            <Bubble key={q.id} style={done ? styles.doneCard : undefined}>
+              <View style={styles.head}>
+                <View style={[styles.badge, done && styles.badgeDone]}>
+                  <Text style={styles.badgeGlyph}>{q.emoji}</Text>
+                </View>
+                <View style={styles.copy}>
+                  <Text style={styles.name}>{q.name}</Text>
+                  <Text style={styles.blurb}>{q.blurb}</Text>
+                </View>
+              </View>
               <Text style={styles.meta}>
-                Needs power {q.powerNeeded} · Costs {cost || 'nothing'} · Reward {q.rewardStars}⭐
+                Needs power {q.powerNeeded} · Costs {cost || 'nothing'} · Reward {rewardBits.join(' · ')}
               </Text>
               {done ? (
-                <Text style={styles.done}>Finished — nice work!</Text>
+                <Text style={styles.done}>Finished — the keep is safer</Text>
               ) : (
                 <BigButton
-                  label="Go Adventure!"
+                  label="Go Adventure"
                   tone="green"
                   onPress={() => doQuest(q.id)}
                   style={{ marginTop: 10 }}
@@ -72,15 +83,35 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: colors.inkSoft,
     marginBottom: 12,
+    lineHeight: 21,
   },
-  emoji: { fontSize: 40, marginBottom: 4 },
+  head: { flexDirection: 'row', gap: 12, alignItems: 'center' },
+  badge: {
+    width: 56,
+    height: 56,
+    borderRadius: 16,
+    backgroundColor: 'rgba(242, 193, 78, 0.28)',
+    borderWidth: 2,
+    borderColor: colors.goldDeep,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  badgeDone: {
+    backgroundColor: 'rgba(111, 191, 115, 0.28)',
+    borderColor: colors.meadowDeep,
+  },
+  badgeGlyph: { fontSize: 26 },
+  copy: { flex: 1 },
   name: { fontFamily: fonts.displaySemi, fontSize: 20, color: colors.ink },
   blurb: { fontFamily: fonts.body, fontSize: 15, color: colors.ink, marginTop: 4 },
-  meta: { fontFamily: fonts.bodySemi, fontSize: 13, color: colors.inkSoft, marginTop: 8 },
+  meta: { fontFamily: fonts.bodySemi, fontSize: 13, color: colors.inkSoft, marginTop: 10 },
   done: {
     marginTop: 10,
     fontFamily: fonts.displayMed,
     fontSize: 16,
     color: colors.meadowDeep,
+  },
+  doneCard: {
+    borderColor: 'rgba(62, 154, 74, 0.35)',
   },
 });

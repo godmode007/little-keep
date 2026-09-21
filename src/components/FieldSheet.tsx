@@ -10,6 +10,7 @@ import { FORT_NAMES, TOWER_COST } from '../game/world';
 import { useKidsStore } from '../store/kidsStore';
 import { colors, fonts } from '../theme/theme';
 import { BigButton } from './BigButton';
+import { HeroPortrait } from './HeroPortrait';
 
 export type FieldTarget =
   | 'castle'
@@ -82,6 +83,8 @@ export function FieldSheet({ target, onClose }: Props) {
   let title = '';
   let sentence = '';
   let meta: string | null = null;
+  let heroId: HeroId | null = null;
+  let raceLine: string | null = null;
   let primary: { label: string; tone: 'gold' | 'green' | 'coral'; onPress: () => void } | null = null;
 
   const woodsMatch = /^woods-(\d+)$/.exec(target);
@@ -219,9 +222,11 @@ export function FieldSheet({ target, onClose }: Props) {
   } else {
     const hero = HEROES.find((h) => h.id === (target as HeroId))!;
     const inParty = recruited.includes(hero.id);
+    heroId = hero.id;
     title = `${hero.name} ${hero.title}`;
-    sentence = hero.blurb;
-    meta = `Power ${hero.power}${inParty ? ' · Already in the party' : ''}`;
+    raceLine = `${hero.race} · ${hero.role}`;
+    sentence = inParty ? hero.presence : hero.blurb;
+    meta = `Power ${hero.power}${inParty ? ' · In the party' : ' · Waiting to join'}`;
     if (!inParty) {
       const cost = costText(hero.recruitCost);
       meta = `${meta}${cost ? ` · ${cost}` : ' · Free friend'}`;
@@ -242,8 +247,22 @@ export function FieldSheet({ target, onClose }: Props) {
         accessibilityLabel="Close sheet"
       />
       <View style={styles.sheet} accessibilityViewIsModal>
-        <Text style={styles.title}>{title}</Text>
-        {meta ? <Text style={styles.meta}>{meta}</Text> : null}
+        <View style={styles.handle} />
+        {heroId ? (
+          <View style={styles.heroRow}>
+            <HeroPortrait id={heroId} size={88} selected />
+            <View style={styles.heroCopy}>
+              <Text style={styles.title}>{title}</Text>
+              {raceLine ? <Text style={styles.race}>{raceLine}</Text> : null}
+              {meta ? <Text style={styles.meta}>{meta}</Text> : null}
+            </View>
+          </View>
+        ) : (
+          <>
+            <Text style={styles.title}>{title}</Text>
+            {meta ? <Text style={styles.meta}>{meta}</Text> : null}
+          </>
+        )}
         <Text style={styles.sentence}>{sentence}</Text>
         {error ? <Text style={styles.error}>{error}</Text> : null}
         {primary ? (
@@ -267,20 +286,39 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(43, 58, 66, 0.28)',
   },
   sheet: {
-    backgroundColor: colors.panel,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    backgroundColor: colors.cream,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
     paddingHorizontal: 18,
-    paddingTop: 18,
-    paddingBottom: 16,
+    paddingTop: 10,
+    paddingBottom: 18,
     borderWidth: 2,
     borderColor: colors.border,
     gap: 10,
   },
+  handle: {
+    alignSelf: 'center',
+    width: 44,
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: colors.border,
+    marginBottom: 4,
+  },
+  heroRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+  },
+  heroCopy: { flex: 1, gap: 4 },
   title: {
     fontFamily: fonts.display,
     fontSize: 24,
     color: colors.ink,
+  },
+  race: {
+    fontFamily: fonts.displayMed,
+    fontSize: 15,
+    color: colors.meadowDeep,
   },
   meta: {
     fontFamily: fonts.bodySemi,

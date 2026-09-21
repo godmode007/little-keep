@@ -61,6 +61,13 @@ export const BUILD_SPOTS = {
   flag: { x: PLOTS.flag.x, y: PLOTS.flag.y },
 } as const;
 
+/** Courtyard invite pads for unrecruited friends (camp tile, south of hut). */
+export const COURT_PADS: { id: 'mira' | 'blink' | 'nana'; x: number; y: number }[] = [
+  { id: 'mira', x: 45.2, y: 54.0 },
+  { id: 'blink', x: 54.8, y: 54.0 },
+  { id: 'nana', x: 50.0, y: 56.6 },
+];
+
 /** Early / mid / late look. Size stays the plot — art changes, it does not grow out of tile. */
 export function buildingPhase(level: number, maxLevel: number): 1 | 2 | 3 {
   if (level <= 1) return 1;

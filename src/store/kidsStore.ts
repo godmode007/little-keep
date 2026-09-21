@@ -319,9 +319,12 @@ export const useKidsStore = create<KidsState>()(
         set({
           resources: pay(state.resources, hero.recruitCost),
           recruited: [...state.recruited, id],
-          lastMessage: `${hero.name} joined your party!`,
+          lastMessage: `${hero.name} the ${hero.race.toLowerCase()} ${hero.role.toLowerCase()} joined your party!`,
         });
-        return { ok: true, message: `${hero.name} joined!` };
+        return {
+          ok: true,
+          message: `${hero.name} joined! ${hero.presence}`,
+        };
       },
 
       doQuest: (id) => {

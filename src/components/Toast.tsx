@@ -8,7 +8,7 @@ export function Toast({ message }: { message: string | null }) {
   useEffect(() => {
     if (!message) return;
     setShown(message);
-    const t = setTimeout(() => setShown(null), 2500);
+    const t = setTimeout(() => setShown(null), 3200);
     return () => clearTimeout(t);
   }, [message]);
 
